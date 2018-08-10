@@ -12,6 +12,7 @@ __sets = {}
 import numpy as np
 
 from .pascal_voc import pascal_voc
+from .pascal_voc_parts import pascal_voc_parts
 from .imagenet3d import imagenet3d
 from .kitti import kitti
 from .kitti_tracking import kitti_tracking
@@ -35,7 +36,7 @@ for year in ['2007', '2012', '0712']:
     for split in ['train', 'val', 'trainval', 'test']:
         name = 'voc_{}_{}'.format(year, split)
         __sets[name] = (lambda split=split, year=year:
-                        pascal_voc(split, year))
+                        pascal_voc(split, year, devkit_path = "/home/maoym/Develop/data/VOCparts/VOCParts2018"))
 
 
     # Set up kittivoc

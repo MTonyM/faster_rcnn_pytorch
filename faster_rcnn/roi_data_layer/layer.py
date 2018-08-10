@@ -68,7 +68,7 @@ class RoIDataLayer(object):
         db_inds = self._get_next_minibatch_inds()
         minibatch_db = [self._roidb[i] for i in db_inds]
         return get_minibatch(minibatch_db, self._num_classes)
-            
+
     def forward(self):
         """Get blobs and copy them into this layer's top blob vector."""
         blobs = self._get_next_minibatch()

@@ -4,7 +4,6 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-from utils.blob import im_list_to_blob
 from network import Conv2d
 import network
 
@@ -61,25 +60,25 @@ class VGG16(nn.Module):
                 param = param.permute(3, 2, 0, 1)
             val.copy_(param)
 
-    # def load_from_npy_file(self, fname):
-    #     own_dict = self.state_dict()
-    #     params = np.load(fname).item()
-    #     for name, val in own_dict.items():
-    #         # # print name
-    #         # # print val.size()
-    #         # # print param.size()
-    #         # if name.find('bn.') >= 0:
-    #         #     continue
-    #
-    #         i, j = int(name[4]), int(name[6]) + 1
-    #         ptype = 'weights' if name[-1] == 't' else 'biases'
-    #         key = 'conv{}_{}'.format(i, j)
-    #         param = torch.from_numpy(params[key][ptype])
-    #
-    #         if ptype == 'weights':
-    #             param = param.permute(3, 2, 0, 1)
-    #
-    #         val.copy_(param)
+    def load_from_npy_file(self, fname):
+        own_dict = self.state_dict()
+        params = np.load(fname).item()
+        for name, val in own_dict.items():
+            # # print name
+            # # print val.size()
+            # # print param.size()
+            # if name.find('bn.') >= 0:
+            #     continue
+    
+            i, j = int(name[4]), int(name[6]) + 1
+            ptype = 'weights' if name[-1] == 't' else 'biases'
+            key = 'conv{}_{}'.format(i, j)
+            param = torch.from_numpy(params[key][ptype])
+    
+            if ptype == 'weights':
+                param = param.permute(3, 2, 0, 1)
+    
+            val.copy_(param)
 
 
 if __name__ == '__main__':

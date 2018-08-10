@@ -198,8 +198,10 @@ def voc_eval(detpath,
         prec = tp / np.maximum(tp + fp, np.finfo(np.float64).eps)
         ap = voc_ap(rec, prec, use_07_metric)
     else:
-         rec = -1
-         prec = -1
-         ap = -1
-
+#          rec = -1
+#          prec = -1
+#          ap = -1
+         rec = 0
+         prec = 0
+         ap = 0
     return rec, prec, ap

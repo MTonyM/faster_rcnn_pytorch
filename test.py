@@ -132,8 +132,8 @@ def test_net(name, net, imdb, max_per_image=300, thresh=0.05, vis=False):
                     all_boxes[j][i] = all_boxes[j][i][keep, :]
         nms_time = _t['misc'].toc(average=False)
 
-        print 'im_detect: {:d}/{:d} {:.3f}s {:.3f}s' \
-            .format(i + 1, num_images, detect_time, nms_time)
+#         print 'im_detect: {:d}/{:d} {:.3f}s {:.3f}s' \
+#             .format(i + 1, num_images, detect_time, nms_time)
 
         if vis:
             cv2.imshow('test', im2show)
@@ -153,11 +153,12 @@ if __name__ == '__main__':
 
     # load net
     net = FasterRCNN(classes=imdb.classes, debug=False)
-    network.load_net(trained_model, net)
-    print('load model successfully!')
+    for i in range(10):
+        trained_model = 'models/saved_model3/faster_rcnn_'+str((i+1)*10000)+'.h5'
+        network.load_net(trained_model, net)
+        print('load model successfully!', trained_model)
+        net.cuda()
+        net.eval()
 
-    net.cuda()
-    net.eval()
-
-    # evaluation
-    test_net(save_name, net, imdb, max_per_image, thresh=thresh, vis=vis)
+        # evaluation
+        test_net(save_name, net, imdb, max_per_image, thresh=thresh, vis=vis)

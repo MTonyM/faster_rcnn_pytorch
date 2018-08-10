@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+                
 from utils.timer import Timer
 from utils.blob import im_list_to_blob
 from fast_rcnn.nms_wrapper import nms
@@ -53,13 +54,13 @@ class RPN(nn.Module):
         im_data = network.np_to_variable(im_data, is_cuda=True)
         im_data = im_data.permute(0, 3, 1, 2)
         features = self.features(im_data)
-
+        print(feature.shape)
         rpn_conv1 = self.conv1(features)
 
         # rpn score
         rpn_cls_score = self.score_conv(rpn_conv1)
         rpn_cls_score_reshape = self.reshape_layer(rpn_cls_score, 2)
-        rpn_cls_prob = F.softmax(rpn_cls_score_reshape)
+        rpn_cls_prob = F.softmax(rpn_cls_score_reshape, 0)
         rpn_cls_prob_reshape = self.reshape_layer(rpn_cls_prob, len(self.anchor_scales)*3*2)
 
         # rpn boxes
@@ -88,7 +89,7 @@ class RPN(nn.Module):
         rpn_cls_score = torch.index_select(rpn_cls_score, 0, rpn_keep)
         rpn_label = torch.index_select(rpn_label, 0, rpn_keep)
 
-        fg_cnt = torch.sum(rpn_label.data.ne(0))
+        fg_cnt = float(torch.sum(rpn_label.data.ne(0)))
 
         rpn_cross_entropy = F.cross_entropy(rpn_cls_score, rpn_label)
 
@@ -96,8 +97,13 @@ class RPN(nn.Module):
         rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights = rpn_data[1:]
         rpn_bbox_targets = torch.mul(rpn_bbox_targets, rpn_bbox_inside_weights)
         rpn_bbox_pred = torch.mul(rpn_bbox_pred, rpn_bbox_inside_weights)
-
-        rpn_loss_box = F.smooth_l1_loss(rpn_bbox_pred, rpn_bbox_targets, size_average=False) / (fg_cnt + 1e-4)
+        
+        ## Tony Debug.
+        rpn_bbox_pred = rpn_bbox_pred.type(torch.cuda.FloatTensor)
+        rpn_bbox_targets = rpn_bbox_targets.type(torch.cuda.FloatTensor)
+        
+        rpn_loss_box = F.smooth_l1_loss(rpn_bbox_pred, rpn_bbox_targets, 
+                                        size_average=False).float() / (fg_cnt + 1e-4)
 
         return rpn_cross_entropy, rpn_loss_box
 
@@ -172,13 +178,9 @@ class RPN(nn.Module):
 
 class FasterRCNN(nn.Module):
     n_classes = 21
-    classes = np.asarray(['__background__',
-                       'aeroplane', 'bicycle', 'bird', 'boat',
-                       'bottle', 'bus', 'car', 'cat', 'chair',
-                       'cow', 'diningtable', 'dog', 'horse',
-                       'motorbike', 'person', 'pottedplant',
-                       'sheep', 'sofa', 'train', 'tvmonitor'])
-    PIXEL_MEANS = np.array([[[102.9801, 115.9465, 122.7717]]])
+    classes = np.asarray(['__background__',  # always index 0
+                         'bird', 'cat', 'cow', 'dog', 'horse', 'sheep'])
+    PIXEL_MEANS = np.array([[[102.9801, 115.9465, 122.7717]]]) # TODO: Set valid
     SCALES = (600,)
     MAX_SIZE = 1000
 
@@ -227,7 +229,7 @@ class FasterRCNN(nn.Module):
         x = F.dropout(x, training=self.training)
 
         cls_score = self.score_fc(x)
-        cls_prob = F.softmax(cls_score)
+        cls_prob = F.softmax(cls_score, 0)
         bbox_pred = self.bbox_fc(x)
 
         if self.training:
@@ -250,7 +252,7 @@ class FasterRCNN(nn.Module):
             self.bg_cnt = bg_cnt
 
         ce_weights = torch.ones(cls_score.size()[1])
-        ce_weights[0] = float(fg_cnt) / bg_cnt
+        ce_weights[0] = float(fg_cnt) / float(bg_cnt)
         ce_weights = ce_weights.cuda()
         cross_entropy = F.cross_entropy(cls_score, label, weight=ce_weights)
 
@@ -259,7 +261,7 @@ class FasterRCNN(nn.Module):
         bbox_targets = torch.mul(bbox_targets, bbox_inside_weights)
         bbox_pred = torch.mul(bbox_pred, bbox_inside_weights)
 
-        loss_box = F.smooth_l1_loss(bbox_pred, bbox_targets, size_average=False) / (fg_cnt + 1e-4)
+        loss_box = F.smooth_l1_loss(bbox_pred, bbox_targets, size_average=False) / (float(fg_cnt) + 1e-4)
 
         return cross_entropy, loss_box
 
