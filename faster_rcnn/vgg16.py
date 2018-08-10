@@ -46,6 +46,7 @@ class VGG16(nn.Module):
         x = self.conv3(x)
         x = self.conv4(x)
         x = self.conv5(x)
+        print(x.shape)
         return x
 
     def load_from_npz(self, params):
@@ -69,15 +70,15 @@ class VGG16(nn.Module):
             # # print param.size()
             # if name.find('bn.') >= 0:
             #     continue
-    
+
             i, j = int(name[4]), int(name[6]) + 1
             ptype = 'weights' if name[-1] == 't' else 'biases'
             key = 'conv{}_{}'.format(i, j)
             param = torch.from_numpy(params[key][ptype])
-    
+
             if ptype == 'weights':
                 param = param.permute(3, 2, 0, 1)
-    
+
             val.copy_(param)
 
 

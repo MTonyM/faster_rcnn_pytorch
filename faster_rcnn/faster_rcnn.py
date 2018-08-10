@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-                
+
 from utils.timer import Timer
 from utils.blob import im_list_to_blob
 from fast_rcnn.nms_wrapper import nms
@@ -19,6 +19,8 @@ from network import Conv2d, FC
 # from roi_pooling.modules.roi_pool_py import RoIPool
 from roi_pooling.modules.roi_pool import RoIPool
 from vgg16 import VGG16
+from resnet import resnet101
+
 
 
 def nms_detections(pred_boxes, scores, nms_thresh, inds=None):
@@ -54,7 +56,7 @@ class RPN(nn.Module):
         im_data = network.np_to_variable(im_data, is_cuda=True)
         im_data = im_data.permute(0, 3, 1, 2)
         features = self.features(im_data)
-        print(feature.shape)
+        print(features.shape)
         rpn_conv1 = self.conv1(features)
 
         # rpn score
