@@ -39,9 +39,9 @@ class RPN(nn.Module):
     def __init__(self):
         super(RPN, self).__init__()
 
-        self.features = resnet34(pretrained=False, num_classes=7)
+        self.features = resnet34(pretrained=1)
 #         self.features = VGG16(bn=False)
-        self.conv1 = Conv2d(512, 512, 3, same_padding=True)
+        self.conv1 = Conv2d(256, 512, 3, same_padding=True)
         self.score_conv = Conv2d(512, len(self.anchor_scales) * 3 * 2, 1, relu=False, same_padding=False)
         self.bbox_conv = Conv2d(512, len(self.anchor_scales) * 3 * 4, 1, relu=False, same_padding=False)
 
@@ -197,8 +197,8 @@ class FasterRCNN(nn.Module):
 
         self.rpn = RPN()
         self.roi_pool = RoIPool(7, 7, 1.0/16)
-        self.fc6 = FC(512 * 7 * 7, 4096)
-        self.fc7 = FC(4096, 4096)
+        self.fc6 = FC(256 * 7 * 7, 2048)  # previous is 512 * 7 * 7
+        self.fc7 = FC(2048, 4096)
         self.score_fc = FC(4096, self.n_classes, relu=False)
         self.bbox_fc = FC(4096, self.n_classes * 4, relu=False)
 

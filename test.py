@@ -13,6 +13,7 @@ from faster_rcnn.fast_rcnn.bbox_transform import bbox_transform_inv, clip_boxes
 from faster_rcnn.datasets.factory import get_imdb
 from faster_rcnn.fast_rcnn.config import cfg, cfg_from_file, get_output_dir
 
+import visualize as visImg
 
 # hyper-parameters
 # ------------
@@ -80,9 +81,9 @@ def im_detect(net, image):
 
     return scores, pred_boxes
 
-
-def test_net(name, net, imdb, max_per_image=300, thresh=0.05, vis=False):
+def test_net(name, net, imdb, max_per_image=300, thresh=0.05, vis=False, iters="0000", ext=[]):
     """Test a Fast R-CNN network on an image database."""
+    vis_www = True
     num_images = len(imdb.image_index)
     # all detections are collected into:
     #    all_boxes[cls][image] = N x 5 array of detections in
@@ -95,7 +96,7 @@ def test_net(name, net, imdb, max_per_image=300, thresh=0.05, vis=False):
     # timers
     _t = {'im_detect': Timer(), 'misc': Timer()}
     det_file = os.path.join(output_dir, 'detections.pkl')
-
+    images = []
     for i in range(num_images):
 
         im = cv2.imread(imdb.image_path_at(i))
@@ -107,7 +108,10 @@ def test_net(name, net, imdb, max_per_image=300, thresh=0.05, vis=False):
         if vis:
             # im2show = np.copy(im[:, :, (2, 1, 0)])
             im2show = np.copy(im)
-
+            
+        if vis_www:
+            im2show = np.copy(im)
+            images.append(np.copy(im))
         # skip j = 0, because it's the background class
         for j in xrange(1, imdb.num_classes):
             inds = np.where(scores[:, j] > thresh)[0]
@@ -118,6 +122,8 @@ def test_net(name, net, imdb, max_per_image=300, thresh=0.05, vis=False):
             keep = nms(cls_dets, cfg.TEST.NMS)
             cls_dets = cls_dets[keep, :]
             if vis:
+                im2show = vis_detections(im2show, imdb.classes[j], cls_dets)
+            if vis_www:
                 im2show = vis_detections(im2show, imdb.classes[j], cls_dets)
             all_boxes[j][i] = cls_dets
 
@@ -138,10 +144,16 @@ def test_net(name, net, imdb, max_per_image=300, thresh=0.05, vis=False):
         if vis:
             cv2.imshow('test', im2show)
             cv2.waitKey(1)
-
+        if vis_www:
+            images.append(np.copy(im2show))
+        
     with open(det_file, 'wb') as f:
         cPickle.dump(all_boxes, f, cPickle.HIGHEST_PROTOCOL)
-
+    vis_dir = os.path.join(output_dir, "www", "_".join(ext))
+    print(vis_dir)
+    if not os.path.exists(vis_dir):
+        os.makedirs(vis_dir)
+    visImg.writeImgHTML(images, iters, "test", 2, vis_dir)
     print 'Evaluating detections'
     imdb.evaluate_detections(all_boxes, output_dir)
 
@@ -161,4 +173,5 @@ if __name__ == '__main__':
         net.eval()
 
         # evaluation
-        test_net(save_name, net, imdb, max_per_image, thresh=thresh, vis=vis)
+        test_net(save_name, net, imdb, max_per_image, thresh=thresh, 
+                 vis=vis, iters=str((i+1)*3000), ext=["resnet34", "1122", "5"])

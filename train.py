@@ -36,14 +36,14 @@ def log_print(text, color=None, on_color=None, attrs=None):
 imdb_name = 'voc_2007_trainval'
 cfg_file = 'experiments/cfgs/faster_rcnn_end2end.yml'
 pretrained_model = 'data/pretrained_model/VGG_imagenet.npy'
-output_dir = 'models/saved_model3'
+output_dir = 'models/resnet34_pretrained_11125'
 
 start_step = 0
-end_step = 100000
-lr_decay_steps = {60000, 80000}
+end_step = 200000
+lr_decay_steps = {40000, 60000, 80000}
 lr_decay = 1./10
 
-log_store_steps = 3000
+log_store_steps = 4000
 
 
 rand_seed = 1024
@@ -79,7 +79,6 @@ net = FasterRCNN(classes=imdb.classes, debug=_DEBUG)
 network.weights_normal_init(net, dev=0.01)
 # network.load_pretrained_npy(net, pretrained_model)
 
-log = open(os.path.join(output_dir, "train_loss.log"), "a+" )
 
 
 # model_file = '/media/longc/Data/models/VGGnet_fast_rcnn_iter_70000.h5'
@@ -100,6 +99,7 @@ optimizer = torch.optim.SGD(params[8:], lr=lr, momentum=momentum, weight_decay=w
 
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
+log = open(os.path.join(output_dir, "train_loss.log"), "a+" )
 
 # tensorboad
 use_tensorboard = use_tensorboard and CrayonClient is not None
@@ -197,3 +197,31 @@ for step in range(start_step, end_step+1):
         t.tic()
         re_cnt = False
 
+
+        
+def visualize(visImg, epoch, split, postprocess, postprocessTarget, postprocessHeat):
+    outputImgs = []
+    for i in range(len(visImg) // 6):
+        for j in range(self.opt.batchSize):
+            img = postprocess()(visImg[4 * i][j].numpy())
+            outputImgs.append(img)
+            heats = visImg[4 * i + 1][j]
+            h, w = heats[0].shape
+            for k in range(3):
+                heat = postprocessHeat()(heats[k].view(1, h ,w).numpy())
+                heat = cv2.resize(heat,(422,422),interpolation=cv2.INTER_LINEAR)
+                outputImgs.append(heat)
+            regResult = postprocessTarget()(visImg[4 * i + 2][j].numpy())
+            outputImgs.append(self.drawBox(img, regResult))
+            regResult = postprocessTarget()(visImg[4 * i + 3][j])
+            outputImgs.append(self.drawBox(img, regResult))
+    vis.writeImgHTML(outputImgs, epoch, split, 6, self.opt)
+    
+def drawBox(self, img, box):
+    x_min = self.regPos(box[0])
+    y_min = self.regPos(box[1])
+    x_max = self.regPos(box[2])
+    y_max = self.regPos(box[3])
+    img = img.astype(np.uint8).copy()
+    img = cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+    return img
