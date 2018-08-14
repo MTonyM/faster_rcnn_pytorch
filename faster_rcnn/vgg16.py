@@ -46,7 +46,7 @@ class VGG16(nn.Module):
         x = self.conv3(x)
         x = self.conv4(x)
         x = self.conv5(x)
-        print(x.shape)
+#         print(x.shape)
         return x
 
     def load_from_npz(self, params):

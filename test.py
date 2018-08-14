@@ -153,8 +153,8 @@ if __name__ == '__main__':
 
     # load net
     net = FasterRCNN(classes=imdb.classes, debug=False)
-    for i in range(10):
-        trained_model = 'models/saved_model3/faster_rcnn_'+str((i+1)*10000)+'.h5'
+    for i in range(33):
+        trained_model = 'models/saved_model3/resnet34_default/faster_rcnn_'+str((i+1)*3000)+'.h5'
         network.load_net(trained_model, net)
         print('load model successfully!', trained_model)
         net.cuda()

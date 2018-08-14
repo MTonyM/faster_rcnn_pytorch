@@ -19,7 +19,7 @@ from network import Conv2d, FC
 # from roi_pooling.modules.roi_pool_py import RoIPool
 from roi_pooling.modules.roi_pool import RoIPool
 from vgg16 import VGG16
-from resnet import resnet101
+from resnet import resnet34
 
 
 
@@ -39,7 +39,8 @@ class RPN(nn.Module):
     def __init__(self):
         super(RPN, self).__init__()
 
-        self.features = VGG16(bn=False)
+        self.features = resnet34(pretrained=False, num_classes=7)
+#         self.features = VGG16(bn=False)
         self.conv1 = Conv2d(512, 512, 3, same_padding=True)
         self.score_conv = Conv2d(512, len(self.anchor_scales) * 3 * 2, 1, relu=False, same_padding=False)
         self.bbox_conv = Conv2d(512, len(self.anchor_scales) * 3 * 4, 1, relu=False, same_padding=False)
@@ -55,8 +56,9 @@ class RPN(nn.Module):
     def forward(self, im_data, im_info, gt_boxes=None, gt_ishard=None, dontcare_areas=None):
         im_data = network.np_to_variable(im_data, is_cuda=True)
         im_data = im_data.permute(0, 3, 1, 2)
+#         print("=> before", im_data.shape)
         features = self.features(im_data)
-        print(features.shape)
+#         print("=> after", features.shape)
         rpn_conv1 = self.conv1(features)
 
         # rpn score

@@ -43,6 +43,9 @@ end_step = 100000
 lr_decay_steps = {60000, 80000}
 lr_decay = 1./10
 
+log_store_steps = 3000
+
+
 rand_seed = 1024
 _DEBUG = True
 use_tensorboard = False
@@ -74,9 +77,9 @@ print("=> loaded data")
 # load net
 net = FasterRCNN(classes=imdb.classes, debug=_DEBUG)
 network.weights_normal_init(net, dev=0.01)
-network.load_pretrained_npy(net, pretrained_model)
+# network.load_pretrained_npy(net, pretrained_model)
 
-
+log = open(os.path.join(output_dir, "train_loss.log"), "a+" )
 
 
 # model_file = '/media/longc/Data/models/VGGnet_fast_rcnn_iter_70000.h5'
@@ -174,10 +177,15 @@ for step in range(start_step, end_step+1):
                       'rcnn_box': float(net.loss_box.data.cpu().numpy()[0])}
             exp.add_scalar_dict(losses, step=step)
 
-    if (step % 10000 == 0) and step > 0:
+    if (step % log_store_steps == 0) and step > 0:
         save_name = os.path.join(output_dir, 'faster_rcnn_{}.h5'.format(step))
         network.save_net(save_name, net)
         print('save model: {}'.format(save_name))
+    
+    if (step % log_store_steps == 0 and step > 0):
+        log.write(str(step) + ": %.5f \n" % float(train_loss / step))
+        log.flush()
+    
     if step in lr_decay_steps:
         lr *= lr_decay
         optimizer = torch.optim.SGD(params[8:], lr=lr, momentum=momentum, weight_decay=weight_decay)

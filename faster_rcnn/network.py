@@ -110,7 +110,8 @@ def clip_gradient(model, clip_norm):
     """Computes a gradient clipping coefficient based on gradient norm."""
     totalnorm = 0
     for p in model.parameters():
-        if p.requires_grad:
+        if p.requires_grad and p.grad is not None:
+#             print(p.grad)
             modulenorm = p.grad.data.norm()
             totalnorm += modulenorm ** 2
     totalnorm = np.sqrt(totalnorm)
@@ -118,5 +119,5 @@ def clip_gradient(model, clip_norm):
     norm = clip_norm / max(totalnorm, clip_norm)
     norm = float(norm)
     for p in model.parameters():
-        if p.requires_grad:
+        if p.requires_grad and p.grad is not None:
             p.grad.mul_(norm)
