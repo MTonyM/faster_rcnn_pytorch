@@ -36,11 +36,11 @@ def log_print(text, color=None, on_color=None, attrs=None):
 imdb_name = 'voc_2007_trainval'
 cfg_file = 'experiments/cfgs/faster_rcnn_end2end.yml'
 pretrained_model = 'data/pretrained_model/VGG_imagenet.npy'
-output_dir = 'models/resnet34_pretrained_11125'
+output_dir = 'models/VGG16_pretrained_default'
 
 start_step = 0
-end_step = 200000
-lr_decay_steps = {40000, 60000, 80000}
+end_step = 120000
+lr_decay_steps = {40000, 60000, 80000, 11000}
 lr_decay = 1./10
 
 log_store_steps = 4000
@@ -77,7 +77,7 @@ print("=> loaded data")
 # load net
 net = FasterRCNN(classes=imdb.classes, debug=_DEBUG)
 network.weights_normal_init(net, dev=0.01)
-# network.load_pretrained_npy(net, pretrained_model)
+network.load_pretrained_npy(net, pretrained_model)
 
 
 

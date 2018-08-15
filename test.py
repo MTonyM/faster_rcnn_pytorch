@@ -24,7 +24,7 @@ trained_model = 'models/saved_model3/faster_rcnn_90000.h5'
 
 rand_seed = 1024
 
-save_name = 'faster_rcnn_100000'
+save_name = 'frcnn_VGG16'
 max_per_image = 300
 thresh = 0.05
 vis = False
@@ -149,7 +149,7 @@ def test_net(name, net, imdb, max_per_image=300, thresh=0.05, vis=False, iters="
         
     with open(det_file, 'wb') as f:
         cPickle.dump(all_boxes, f, cPickle.HIGHEST_PROTOCOL)
-    vis_dir = os.path.join(output_dir, "www", "_".join(ext))
+    vis_dir = os.path.join(output_dir,"..","..","..", "www", "_".join(ext))
     print(vis_dir)
     if not os.path.exists(vis_dir):
         os.makedirs(vis_dir)
@@ -165,8 +165,8 @@ if __name__ == '__main__':
 
     # load net
     net = FasterRCNN(classes=imdb.classes, debug=False)
-    for i in range(33):
-        trained_model = 'models/saved_model3/resnet34_default/faster_rcnn_'+str((i+1)*3000)+'.h5'
+    for i in range(26):
+        trained_model = 'models/VGG16_pretrained_default/faster_rcnn_'+str((i+1)*4000)+'.h5'
         network.load_net(trained_model, net)
         print('load model successfully!', trained_model)
         net.cuda()
@@ -174,4 +174,4 @@ if __name__ == '__main__':
 
         # evaluation
         test_net(save_name, net, imdb, max_per_image, thresh=thresh, 
-                 vis=vis, iters=str((i+1)*3000), ext=["resnet34", "1122", "5"])
+                 vis=vis, iters=str((i+1)*4000), ext=["VGG16", "default"])
