@@ -314,7 +314,7 @@ class pascal_voc(imdb):
 #             f.write(log)
             with open(os.path.join(output_dir, cls + '_pr.pkl'), 'w') as f:
                 cPickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)
-        f = open(os.path.join(output_dir, "..", "..", "..", "VGG16_default_test_map.log"), 'a+')
+        f = open(os.path.join(output_dir, "..", "..", "..", "VGG16_default_official_test_map.log"), 'a+')
         print('Mean AP = {:.4f}'.format(np.mean(aps)))
         f.write('mAP:{:.4f},'.format(np.mean(aps)))
         print('~~~~~~~~')

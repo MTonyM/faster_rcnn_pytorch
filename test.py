@@ -165,8 +165,8 @@ if __name__ == '__main__':
 
     # load net
     net = FasterRCNN(classes=imdb.classes, debug=False)
-    for i in range(26):
-        trained_model = 'models/VGG16_pretrained_default/faster_rcnn_'+str((i+1)*4000)+'.h5'
+    for i in range(10):
+        trained_model = 'models/saved_model3/vgg16_default/faster_rcnn_'+str((i+1)*10000)+'.h5'
         network.load_net(trained_model, net)
         print('load model successfully!', trained_model)
         net.cuda()
@@ -174,4 +174,4 @@ if __name__ == '__main__':
 
         # evaluation
         test_net(save_name, net, imdb, max_per_image, thresh=thresh, 
-                 vis=vis, iters=str((i+1)*4000), ext=["VGG16", "default"])
+                 vis=vis, iters=str((i+1)*10000), ext=["VGG16", "default", "official"])
