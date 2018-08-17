@@ -10,7 +10,7 @@ def renderImgTable(inputImgs, ncoln, imgDir):
         for coln in range(ncoln):
             ID = row * ncoln + coln
             cv2.imwrite(os.path.join(imgDir, '%04d.png' % ID), inputImgs[ID])
-            htmlStr += '<td><img width=240 src="im/%04d.png"></img></td>' % ID
+            htmlStr += '<td><img width=480 src="im/%04d.png"></img></td>' % ID
         htmlStr += '</tr>\n'
     htmlStr += '</table></body></html>\n'
     return htmlStr

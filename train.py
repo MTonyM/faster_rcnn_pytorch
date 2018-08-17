@@ -40,7 +40,7 @@ output_dir = 'models/VGG16_pretrained_default'
 
 start_step = 0
 end_step = 120000
-lr_decay_steps = {40000, 60000, 80000, 11000}
+lr_decay_steps = {60000, 80000, 11000}
 lr_decay = 1./10
 
 log_store_steps = 4000

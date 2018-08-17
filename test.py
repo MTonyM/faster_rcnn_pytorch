@@ -1,3 +1,4 @@
+# coding = utf-8
 import os
 import torch
 import cv2
@@ -14,7 +15,7 @@ from faster_rcnn.datasets.factory import get_imdb
 from faster_rcnn.fast_rcnn.config import cfg, cfg_from_file, get_output_dir
 
 import visualize as visImg
-
+from tqdm import tqdm
 # hyper-parameters
 # ------------
 imdb_name = 'voc_2007_test'
@@ -41,7 +42,7 @@ if rand_seed is not None:
 cfg_from_file(cfg_file)
 
 
-def vis_detections(im, class_name, dets, thresh=0.8):
+def vis_detections(im, class_name, dets, thresh=0.5):
     """Visual debugging of detections."""
     for i in range(np.minimum(10, dets.shape[0])):
         bbox = tuple(int(np.round(x)) for x in dets[i, :4])
@@ -81,7 +82,7 @@ def im_detect(net, image):
 
     return scores, pred_boxes
 
-def test_net(name, net, imdb, max_per_image=300, thresh=0.05, vis=False, iters="0000", ext=[]):
+def test_net(name, net, imdb, max_per_image=300, thresh=1/7.0, vis=False, iters="0000", ext=[]):
     """Test a Fast R-CNN network on an image database."""
     vis_www = True
     num_images = len(imdb.image_index)
@@ -97,7 +98,8 @@ def test_net(name, net, imdb, max_per_image=300, thresh=0.05, vis=False, iters="
     _t = {'im_detect': Timer(), 'misc': Timer()}
     det_file = os.path.join(output_dir, 'detections.pkl')
     images = []
-    for i in range(num_images):
+    print("in test process, plz wait, total %d items", num_images)
+    for i in tqdm(range(num_images)):
 
         im = cv2.imread(imdb.image_path_at(i))
         _t['im_detect'].tic()
@@ -113,7 +115,7 @@ def test_net(name, net, imdb, max_per_image=300, thresh=0.05, vis=False, iters="
             im2show = np.copy(im)
             images.append(np.copy(im))
         # skip j = 0, because it's the background class
-        for j in xrange(1, imdb.num_classes):
+        for j in range(1, imdb.num_classes):
             inds = np.where(scores[:, j] > thresh)[0]
             cls_scores = scores[inds, j]
             cls_boxes = boxes[inds, j * 4:(j + 1) * 4]
@@ -122,9 +124,9 @@ def test_net(name, net, imdb, max_per_image=300, thresh=0.05, vis=False, iters="
             keep = nms(cls_dets, cfg.TEST.NMS)
             cls_dets = cls_dets[keep, :]
             if vis:
-                im2show = vis_detections(im2show, imdb.classes[j], cls_dets)
+                im2show = vis_detections(im2show, imdb.classes[j], cls_dets, thresh)
             if vis_www:
-                im2show = vis_detections(im2show, imdb.classes[j], cls_dets)
+                im2show = vis_detections(im2show, imdb.classes[j], cls_dets, thresh)
             all_boxes[j][i] = cls_dets
 
         # Limit to max_per_image detections *over all classes*
@@ -166,6 +168,8 @@ if __name__ == '__main__':
     # load net
     net = FasterRCNN(classes=imdb.classes, debug=False)
     for i in range(10):
+        if i < 9:
+            continue
         trained_model = 'models/saved_model3/vgg16_default/faster_rcnn_'+str((i+1)*10000)+'.h5'
         network.load_net(trained_model, net)
         print('load model successfully!', trained_model)
